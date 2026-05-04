@@ -1,0 +1,54 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "deploy" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v3
+
+      - name: Configurar AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Iniciar Sesion en Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
+
+      - name: Crear Repositorio ECR si no existe
+        run: |
+          aws ecr-public describe-repositories --repository-names innovatech-frontend || aws ecr-public create-repository --repository-name innovatech-frontend --region us-east-1
+
+      - name: Construir y Subir Imagen Docker
+        env:
+          REGISTRY: public.ecr.aws/l9p0o1b7
+          REPOSITORY: innovatech-frontend
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Desplegar en EC2 Frontend
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FRONTEND_IP }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo yum install -y docker
+            sudo systemctl start docker
+            sudo usermod -aG docker ec2-user
+            sudo docker pull public.ecr.aws/l9p0o1b7/innovatech-frontend:latest
+            sudo docker stop frontend || true
+            sudo docker rm frontend || true
+            sudo docker run -d --name frontend -p 80:80 public.ecr.aws/l9p0o1b7/innovatech-frontend:latest
+
