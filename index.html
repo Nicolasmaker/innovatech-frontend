@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innovatech Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #resultado { margin-top: 20px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Frontend - Innovatech Chile</h1>
+        <p>Prueba de comunicacion entre contenedores</p>
+        <button onclick="checkBackend()">Consultar API Backend</button>
+        <p id="resultado">Esperando consulta...</p>
+    </div>
+
+    <script>
+        async function checkBackend() {
+            const btn = document.querySelector("button");
+            btn.innerText = "Consultando...";
+            try {
+                // La URL se ajustar� din�micamente o apuntar� al backend
+                const backendUrl = window.env?.BACKEND_URL || "http://localhost:3000/api/status";
+                const response = await fetch(backendUrl);
+                const data = await response.json();
+                document.getElementById("resultado").innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById("resultado").innerText = "Error de red: No se pudo conectar al Backend";
+            }
+            btn.innerText = "Consultar API Backend";
+        }
+    </script>
+</body>
+</html>
