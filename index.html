@@ -3,38 +3,461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Innovatech Frontend</title>
+    <title>Innovatech Frontend - Buscador de Feriados</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #resultado { margin-top: 20px; font-weight: bold; color: #333; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .search-section {
+            margin-bottom: 30px;
+        }
+        .search-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-group input,
+        .search-group select {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        .search-group input:focus,
+        .search-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-group input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-group input[type="date"] {
+            min-width: 150px;
+        }
+        .btn {
+            padding: 12px 25px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #5568d3;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn.secondary {
+            background-color: #6c757d;
+        }
+        .btn.secondary:hover {
+            background-color: #5a6268;
+        }
+        .results-section {
+            margin-top: 30px;
+        }
+        .results-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table thead {
+            background-color: #f8f9fa;
+        }
+        table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .estado-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .estado-feriado {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .estado-tirado {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .status-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .filter-badge {
+            background-color: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-badge button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Frontend - Innovatech Chile</h1>
-        <p>Prueba de comunicacion entre contenedores</p>
-        <button onclick="checkBackend()">Consultar API Backend</button>
-        <p id="resultado">Esperando consulta...</p>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Buscador de Feriados</h1>
+            <p>Innovatech Chile - Sistema de Consulta de Feriados</p>
+        </div>
+
+        <div class="card">
+            <!-- Sección de Búsqueda -->
+            <div class="search-section">
+                <h2 style="margin-bottom: 20px; color: #333;">Filtrar Feriados</h2>
+                
+                <div class="search-group">
+                    <input 
+                        type="text" 
+                        id="searchName" 
+                        placeholder="Buscar por nombre del feriado..." 
+                    >
+                </div>
+
+                <div class="search-group">
+                    <input 
+                        type="date" 
+                        id="searchDate" 
+                        title="Buscar por fecha"
+                    >
+                    <select id="filterType">
+                        <option value="">Todos los tipos</option>
+                        <option value="feriado">Feriado</option>
+                        <option value="tirado">Tirado</option>
+                    </select>
+                </div>
+
+                <div class="search-group">
+                    <button class="btn" onclick="searchHolidays()">🔍 Buscar</button>
+                    <button class="btn secondary" onclick="resetSearch()">↻ Limpiar Filtros</button>
+                    <button class="btn secondary" onclick="loadAllHolidays()">📋 Cargar Todos</button>
+                </div>
+            </div>
+
+            <!-- Mensaje de Estado -->
+            <div id="statusMessage" class="status-message"></div>
+
+            <!-- Filtros Activos -->
+            <div id="activeFilters" class="filters"></div>
+
+            <!-- Sección de Resultados -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Resultados</h2>
+                <div class="table-container">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Tipo de Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                </div>
+                <p style="text-align: center; color: #999; font-size: 0.9em;">
+                    Total: <strong id="totalResults">0</strong> resultado(s)
+                </p>
+            </div>
+
+            <!-- Estado Vacío -->
+            <div id="emptyState" class="empty-state">
+                <p>📅 Utiliza los filtros arriba para buscar feriados</p>
+            </div>
+        </div>
+
+        <!-- Sección de Estado del Backend -->
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: #333;">Estado del Servidor</h2>
+            <button class="btn" onclick="checkBackend()">🔗 Verificar Conexión Backend</button>
+            <div id="backendStatus" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; display: none;">
+                <pre id="statusContent" style="overflow-x: auto; color: #333;"></pre>
+            </div>
+        </div>
     </div>
 
     <script>
-        async function checkBackend() {
-            const btn = document.querySelector("button");
-            btn.innerText = "Consultando...";
+        // Variables globales
+        let allHolidays = [];
+        const BACKEND_URL = window.env?.BACKEND_URL || "http://localhost:3000";
+
+        // Cargar todos los feriados
+        async function loadAllHolidays() {
+            showStatus("Cargando feriados...", "info");
             try {
-                // La URL se ajustar� din�micamente o apuntar� al backend
-                const backendUrl = window.env?.BACKEND_URL || "http://localhost:3000/api/status";
-                const response = await fetch(backendUrl);
-                const data = await response.json();
-                document.getElementById("resultado").innerText = JSON.stringify(data, null, 2);
+                // Cambiar esta URL cuando el backend esté listo
+                const response = await fetch(`${BACKEND_URL}/api/holidays`);
+                if (!response.ok) throw new Error("Error al cargar los feriados");
+                allHolidays = await response.json();
+                displayHolidays(allHolidays);
+                showStatus(`Se cargaron ${allHolidays.length} feriados exitosamente`, "success");
             } catch (error) {
-                document.getElementById("resultado").innerText = "Error de red: No se pudo conectar al Backend";
+                showStatus(`Error: ${error.message}. Asegúrate de que el backend está corriendo.`, "error");
+                console.error("Error:", error);
             }
-            btn.innerText = "Consultar API Backend";
         }
+
+        // Buscar feriados con filtros
+        function searchHolidays() {
+            const name = document.getElementById("searchName").value.toLowerCase().trim();
+            const date = document.getElementById("searchDate").value;
+            const type = document.getElementById("filterType").value;
+
+            if (!name && !date && !type) {
+                showStatus("⚠️ Por favor ingresa al menos un criterio de búsqueda", "info");
+                return;
+            }
+
+            let filtered = allHolidays.filter(holiday => {
+                const matchName = !name || holiday.name.toLowerCase().includes(name);
+                const matchDate = !date || holiday.date === date;
+                const matchType = !type || holiday.type.toLowerCase() === type.toLowerCase();
+                return matchName && matchDate && matchType;
+            });
+
+            if (filtered.length === 0) {
+                showStatus("❌ No se encontraron feriados con los criterios especificados", "error");
+                document.getElementById("resultsSection").style.display = "none";
+                document.getElementById("emptyState").style.display = "block";
+            } else {
+                displayHolidays(filtered);
+                updateActiveFilters(name, date, type);
+            }
+        }
+
+        // Mostrar feriados en la tabla
+        function displayHolidays(holidays) {
+            const tbody = document.getElementById("resultsBody");
+            const resultsSection = document.getElementById("resultsSection");
+            const emptyState = document.getElementById("emptyState");
+
+            tbody.innerHTML = "";
+
+            if (holidays.length === 0) {
+                resultsSection.style.display = "none";
+                emptyState.style.display = "block";
+                return;
+            }
+
+            holidays.forEach(holiday => {
+                const row = document.createElement("tr");
+                const badge = holiday.type === "feriado" ? "estado-feriado" : "estado-tirado";
+                row.innerHTML = `
+                    <td>${new Date(holiday.date).toLocaleDateString('es-CL')}</td>
+                    <td><strong>${holiday.name}</strong></td>
+                    <td><span class="estado-badge ${badge}">${holiday.type}</span></td>
+                    <td>${holiday.date_type || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById("totalResults").textContent = holidays.length;
+            resultsSection.style.display = "block";
+            emptyState.style.display = "none";
+            showStatus(`Se encontraron ${holidays.length} feriado(s)`, "success");
+        }
+
+        // Limpiar búsqueda
+        function resetSearch() {
+            document.getElementById("searchName").value = "";
+            document.getElementById("searchDate").value = "";
+            document.getElementById("filterType").value = "";
+            document.getElementById("activeFilters").innerHTML = "";
+            document.getElementById("resultsSection").style.display = "none";
+            document.getElementById("emptyState").style.display = "block";
+            document.getElementById("statusMessage").className = "status-message";
+        }
+
+        // Actualizar filtros activos mostrados
+        function updateActiveFilters(name, date, type) {
+            const container = document.getElementById("activeFilters");
+            container.innerHTML = "";
+
+            if (name) {
+                addFilterBadge(`Nombre: ${name}`, 'searchName');
+            }
+            if (date) {
+                addFilterBadge(`Fecha: ${date}`, 'searchDate');
+            }
+            if (type) {
+                addFilterBadge(`Tipo: ${type}`, 'filterType');
+            }
+        }
+
+        function addFilterBadge(text, elementId) {
+            const container = document.getElementById("activeFilters");
+            const badge = document.createElement("div");
+            badge.className = "filter-badge";
+            badge.innerHTML = `
+                ${text}
+                <button onclick="clearFilter('${elementId}')">×</button>
+            `;
+            container.appendChild(badge);
+        }
+
+        function clearFilter(elementId) {
+            document.getElementById(elementId).value = "";
+            searchHolidays();
+        }
+
+        // Mostrar mensaje de estado
+        function showStatus(message, type = "info") {
+            const statusDiv = document.getElementById("statusMessage");
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            setTimeout(() => {
+                if (type !== "error") {
+                    statusDiv.className = "status-message";
+                }
+            }, 5000);
+        }
+
+        // Verificar estado del backend
+        async function checkBackend() {
+            const statusDiv = document.getElementById("backendStatus");
+            const statusContent = document.getElementById("statusContent");
+            statusContent.textContent = "Conectando...";
+            statusDiv.style.display = "block";
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/status`);
+                const data = await response.json();
+                statusContent.textContent = JSON.stringify(data, null, 2);
+                showStatus("✅ Conexión con backend exitosa", "success");
+            } catch (error) {
+                statusContent.textContent = `❌ Error: ${error.message}\n\nAsegúrate de que el backend está corriendo en ${BACKEND_URL}`;
+                showStatus("❌ No se pudo conectar al backend", "error");
+            }
+        }
+
+        // Permitir Enter para buscar
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("searchName").addEventListener("keypress", (e) => {
+                if (e.key === "Enter") searchHolidays();
+            });
+            document.getElementById("searchDate").addEventListener("keypress", (e) => {
+                if (e.key === "Enter") searchHolidays();
+            });
+        });
     </script>
 </body>
 </html>
